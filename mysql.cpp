@@ -14,7 +14,7 @@ int main()
 	const char *password = "81l2i7kd";  // got tot keep my data secret
 	const char *database = "chudoja3";
 	conn = mysql_init(NULL);
-	
+	//GGG
 	// connect to database
 	if(!mysql_real_connect(conn, server, user, password, database, 0, NULL, 0))
 	{

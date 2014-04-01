@@ -1,0 +1,1 @@
+g++ crawler.cpp -lmysqlclient_r -std=c++11

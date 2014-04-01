@@ -1,0 +1,3 @@
+sudo apt-get install libmysqlclient15-dev
+
+g++ mysql.cpp -lmysqlclient_r

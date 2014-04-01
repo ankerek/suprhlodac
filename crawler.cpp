@@ -19,6 +19,50 @@ void finish_with_error(MYSQL *con)
   return;    
 }
 
+void DB_init()
+{
+	MYSQL *con;
+	const char *server = "webdev.fit.cvut.cz";
+	const char *user = "chudoja3";
+	const char *password = "81l2i7kd";  // got tot keep my data secret
+	const char *database = "test";
+	con = mysql_init(NULL);
+	
+	if (con == NULL) 
+	{
+	  fprintf(stderr, "%s\n", mysql_error(con));
+	  return;
+	}  
+	// connect to database
+	if (!(mysql_real_connect(con, server, user, password, database, 0, NULL, 0))) 
+	{
+	  finish_with_error(con);
+	}    
+
+
+	//check tables
+	if (mysql_query(con, "DROP TABLE IF EXISTS SH_PAGE")) {
+	  finish_with_error(con);
+	}
+	/*
+	if (mysql_query(con, "DROP TABLE IF EXISTS SH_LINK")) {
+	finish_with_error(con);
+	}
+	*/
+	//create tables
+	if (mysql_query(con, "CREATE TABLE SH_PAGE(Name TEXT, PageRank INT)")) {      
+	  finish_with_error(con);
+	}
+	/*
+	if (mysql_query(con, "CREATE TABLE SH_LINK(Id INT, Name TEXT, Price INT)")) {      
+	  finish_with_error(con);
+	}
+	*/
+
+  mysql_close(con);
+  return;
+
+}
 void createConfig()
 {
 	
@@ -113,7 +157,7 @@ void PageRanker(string str)
 	    if (is){}
 	      //std::cout << "all characters read successfully."
 	    else
-	      std::cout << "error: only " << is.gcount() << " could be read";
+	      std::cout << "error::buffer: only " << is.gcount() << " could be read";
 		
     	is.close();
     	delete[] buffer;
@@ -123,7 +167,7 @@ void PageRanker(string str)
 
 	//parsovani + pocitani pageranku
 	//TODO
-	int pagerank = 0;
+	int pagerank = 2;
 	istringstream iss(wholeFile);
 	string line;
 	while(!(iss.eof()))
@@ -144,7 +188,7 @@ void PageRanker(string str)
 		// jmeno: index.html -> aaa.html, bb.html
 		// pagerank: 1
 		//
-
+	
 	//inicializace databáze
 	MYSQL *con;
 	const char *server = "webdev.fit.cvut.cz";
@@ -163,17 +207,60 @@ void PageRanker(string str)
 	{
 	  finish_with_error(con);
 	}    
-	//insert webpages
-	string pagerank_str = to_string(pagerank);
+	//update pagerank and outgoing links
+	string pagerank_str = to_string(pagerank+1);
 	string name = "'" + pagename + "'";
-	string command = "INSERT INTO SH_PAGE VALUES(" + name + ","+ pagerank_str +")";
+	string insert = "INSERT INTO SH_PAGE VALUES(" + name + ","+ pagerank_str +")";
+	string update = "UPDATE SH_PAGE SET Pagerank=" + pagerank_str +" WHERE Name=" + name;
 	//cout<<command;
 	
-	if (mysql_query(con, command.c_str())) {
-      finish_with_error(con);
-  	}
+
+
+	//string check = "SELECT 1 FROM SH_PAGE WHERE KEY = "+pagename+";";
+	//string check = "SELECT * FROM SH_PAGE";
+	string check = "SELECT * FROM SH_PAGE WHERE Name="+name;
+	cout<<check<<endl;
+	//cout<<check<<endl;
+	//kdyz nejde update, udelej insert
 	
-	//cout<<"Crawling done: "<<str<<endl;
+	if (mysql_query(con, check.c_str())==0) //0 pro uspech
+	{
+		MYSQL_RES *res;
+		MYSQL_ROW row;
+		res = mysql_use_result(con);
+		unsigned int numrows = mysql_num_rows(res);
+		cout<<numrows<<endl;
+		while ((row = mysql_fetch_row(res)) != NULL)
+		{
+			//printf("%s %s %s %s %s\n", row[0], row[1], row[2], row[3], row[4]);
+			printf("%s %s\n",row[0], row[1] );
+			
+		}
+	
+		// close connection
+		mysql_free_result(res);
+		mysql_close(con);
+
+		}
+	else{	
+     	finish_with_error(con);
+     	mysql_close(con);
+	}
+	/*
+	if (mysql_query(con, update.c_str())!=0) {
+		cout<<"Insert"<<endl;
+     	if (mysql_query(con, insert.c_str())!=0)
+     	{	
+     		finish_with_error(con);
+     	}
+     	
+  	}
+  	else{
+  		cout<<"Update"<<endl;
+  	}
+  	*/
+  	
+	
   
 }
 //=========================================================================
@@ -192,18 +279,29 @@ void PageRankerCompleter(vector<string> urls)
 //=========================================================================
 
 int main() {
-   createConfig();
-   vector<string> listOfFiles;
-   listOfFiles = getListOfFiles();
-   if(listOfFiles.size() == 0)
-   {
-	cout<< "Error reading config.cfg" << endl;
-   }
-   PageRankerCompleter(listOfFiles);
-   //PrintList(listOfFiles);
+	//nutno restartovat pro nacteni noveho configu
+
+	createConfig();
+	vector<string> listOfFiles;
+	listOfFiles = getListOfFiles();
+
+	//crawling cycle
+	int i= 1;
+	while(i>0)
+	{
+	  
+	   if(listOfFiles.size() == 0)
+	   {
+		cout<< "Error reading config.cfg" << endl;
+	   }
+	   PageRankerCompleter(listOfFiles);
+	   //PrintList(listOfFiles);
+	   i--;
+	}
+  
    	
  
 
 
 	return 0;
-  }
+}

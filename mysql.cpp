@@ -5,7 +5,7 @@
 
 using namespace std;
 
-
+/*
 void finish_with_error(MYSQL *con)
 {
   fprintf(stderr, "%s\n", mysql_error(con));
@@ -82,6 +82,7 @@ int main(int argc, char **argv)
   return 0;
 }
 
+*/
 
 
 
@@ -111,8 +112,7 @@ int main(int argc, char **argv)
 
 
 
-
-/*  //vypis dat z DB 
+  //vypis dat z DB 
 int main()
 {
 	MYSQL *conn;
@@ -121,7 +121,7 @@ int main()
 	const char *server = "webdev.fit.cvut.cz";
 	const char *user = "chudoja3";
 	const char *password = "81l2i7kd";  // got tot keep my data secret
-	const char *database = "chudoja3";
+	const char *database = "test";
 	conn = mysql_init(NULL);
 	//GGG
 	// connect to database
@@ -134,12 +134,17 @@ int main()
 	// send SQL query
 	//SELECT TABLE_NAME FROM Information_Schema.Tables where Table_Type = 'BASE TABLE'
 	//select * from Item
+	/*
 	if(mysql_query(conn, "SELECT TABLE_NAME FROM Information_Schema.Tables where Table_Type = 'BASE TABLE'"))
 	{
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		return -1;
 	}
-	
+	*/
+	if(mysql_query(conn,"select * from SH_PAGE") != 0) // 0 pro uspech
+	{
+		cout<<"chyba"<<endl;
+	}
 	res = mysql_use_result(conn);
 	// output table name
 	cout<<"MySQL Tables in mysql database: "<<endl;
@@ -156,4 +161,3 @@ int main()
 	
 	return 0;
 }
-*/
